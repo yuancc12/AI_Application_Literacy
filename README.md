@@ -24,6 +24,7 @@
 **相關技能**：Python,LLM,RPA,Node.js,JavaScript,Arduino,C++,C#,C
 ***
 # 額外教材
++ [術語小抄](https://moodle3.ntnu.edu.tw/mod/page/view.php?id=1216218)
 + [圖片與語音轉換Token研究](https://moodle3.ntnu.edu.tw/mod/resource/view.php?id=1216221)
 
 # 課堂PPT
