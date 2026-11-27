@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAGAS 評審指南</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Noto+Sans+TC:wght@400;700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* VOICE everyday learning, playful and confident
+   IDEA a drafting kit: the ragas set-square, a ruler edge and a measuring sheet where every metric is a measured arrow
+   PICTURE the classic four-node RAGAS map drawn live; pick a metric and its arrow lights, a token travels it
+   COLOUR ruler yellow band, warm white sheet, near-black ink, electric blue for the measured path; node tints from the original map
+   TYPE Archivo 900 + Noto Sans TC, JetBrains Mono for metric names and code
+   LAYOUT yellow title band; map 60% beside a detail panel 40% on laptop; stacked map then panel on phones */
+:root{color-scheme:light;--bg:#fffbf0;--paper:#ffffff;--ink:#14151b;--muted:#545866;--line:#e4dfcf;--yel:#ffc627;--yel2:#fff1c2;--blue:#2457ff;--blue2:#e3eaff;--red:#d6264a;--red2:#fde3e8;--q:#d3e2f7;--c:#fff1c9;--r:#d4e8ee;--g:#ececec}
+*{box-sizing:border-box;min-width:0}
+html{scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 'Archivo','Noto Sans TC',system-ui,sans-serif;overflow-x:clip}
+.band{padding-block:clamp(28px,4vw,60px);padding-inline:max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+h1,h2,h3{line-height:1.08;letter-spacing:-.02em;text-wrap:balance;margin:0}
+h1{font-size:clamp(36px,5.4vw,56px);font-weight:900}
+h2{font-size:clamp(28px,3.6vw,40px);font-weight:900;margin-bottom:10px}
+h3{font-size:19px;font-weight:900;margin-bottom:6px}
+p{margin:0 0 12px;max-width:70ch}
+.muted{color:var(--muted)}
+code,.mono{font-family:'JetBrains Mono',Consolas,monospace}
+nav{position:sticky;top:0;z-index:9;background:var(--ink)}
+nav .wrap{display:flex;gap:4px;overflow-x:auto;padding:8px max(5vw,16px);align-items:center}
+nav .logo{flex:none;display:flex;align-items:center;gap:8px;color:#fff;font-weight:900;font-size:20px;margin-right:12px}
+nav a{flex:none;color:#fff;text-decoration:none;font-weight:700;padding:8px 14px;border-radius:999px}
+nav a:hover,nav a:focus-visible{background:var(--yel);color:var(--ink);outline:none}
+.hero{background:var(--yel);position:relative;padding-bottom:72px}
+.hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:26px;background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 12px),repeating-linear-gradient(90deg,var(--ink) 0 3px,transparent 3px 60px);background-size:auto 12px,auto 26px;background-repeat:repeat-x;background-position:bottom left;opacity:.85}
+.top{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:28px;align-items:end;margin-bottom:24px}
+.top p{font-size:17px}
+.stats{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}
+.stat{background:var(--ink);color:#fff;border-radius:12px;padding:10px 14px}
+.stat b{display:block;font-size:22px;font-weight:900;white-space:nowrap;color:var(--yel)}
+.stat span{font-size:13px}
+.board{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:stretch}
+.sheet{background:var(--paper);border:3px solid var(--ink);border-radius:18px;box-shadow:8px 8px 0 var(--ink);padding:14px;display:flex;flex-direction:column}
+.grid{background-image:linear-gradient(var(--blue2) 1px,transparent 1px),linear-gradient(90deg,var(--blue2) 1px,transparent 1px);background-size:24px 24px;border-radius:10px}
+.fig{position:relative;min-height:440px;flex:1}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{paint-order:stroke;stroke:#fff;stroke-width:5px;stroke-linejoin:round}
+.edge{cursor:pointer}
+.flow{stroke-dasharray:10 8;animation:flow .7s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-18}}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 14px 'JetBrains Mono',monospace;min-height:44px;padding:8px 14px;border-radius:999px;border:2px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer}
+.chip i{font-style:normal;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--yel);font:900 13px 'Archivo',sans-serif}
+.chip[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.panel{background:var(--paper);border:3px solid var(--ink);border-radius:18px;box-shadow:8px 8px 0 var(--ink);padding:22px;display:flex;flex-direction:column;gap:10px}
+.panel .name{font:700 15px 'JetBrains Mono',monospace;color:var(--blue)}
+.route{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:700}
+.node{padding:4px 12px;border-radius:8px;border:2px solid var(--ink);font-size:14px}
+.kv{display:grid;grid-template-columns:5.5em minmax(0,1fr);gap:6px 10px;font-size:15px}
+.kv dt{color:var(--muted)}.kv dd{margin:0}
+.ex{background:var(--yel2);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
+.ex b{font-size:40px;font-weight:900;line-height:1}
+.call{font:13px/1.6 'JetBrains Mono',monospace;background:var(--ink);color:#fff;border-radius:10px;padding:10px 12px;overflow-wrap:anywhere}
+.ctrl{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.btn{min-height:44px;padding:8px 18px;border-radius:12px;border:2px solid var(--ink);background:var(--yel);color:var(--ink);font:900 15px 'Archivo','Noto Sans TC',sans-serif;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:none}
+.btn.alt{background:#fff}
+.sec-title{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.tri{width:30px;height:30px;flex:none;align-self:center}
+.cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.card{background:var(--paper);border:2px solid var(--ink);border-radius:16px;padding:20px;box-shadow:5px 5px 0 var(--ink)}
+.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.tab{min-height:44px;padding:8px 16px;border-radius:10px;border:2px solid var(--ink);background:#fff;color:var(--ink);font:700 15px 'Archivo','Noto Sans TC',sans-serif;cursor:pointer}
+.tab[aria-selected=true]{background:var(--ink);color:var(--yel)}
+.codebox{position:relative;background:#fbfaf4;border:2px solid var(--ink);border-radius:14px}
+pre{margin:0;padding:18px 18px 16px;overflow-x:auto;font:14px/1.65 'JetBrains Mono',Consolas,monospace;color:var(--ink)}
+pre .c{color:#6b6f7c}pre .k{color:var(--red)}pre .s{color:#0b6a5a}
+.copy{position:absolute;top:8px;right:8px;min-height:34px;padding:4px 12px;border-radius:8px;border:2px solid var(--ink);background:var(--yel);font:700 13px 'Archivo','Noto Sans TC',sans-serif;cursor:pointer}
+.steps{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:24px;align-items:start}
+.steplist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.steplist button{width:100%;text-align:left;min-height:44px;padding:12px 16px;border-radius:12px;border:2px solid var(--ink);background:#fff;color:var(--ink);font:inherit;cursor:pointer}
+.steplist button[aria-current=true]{background:var(--yel);box-shadow:4px 4px 0 var(--ink)}
+.steplist b{display:block}
+.lab{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:22px;align-items:stretch}
+.ctx{background:var(--c);border-radius:12px;padding:12px 16px;margin-bottom:10px}
+.ans{background:var(--r);border-radius:12px;padding:12px 16px;margin-bottom:12px}
+.claims{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.claims li{display:flex;justify-content:space-between;gap:12px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:10px;padding:8px 14px}
+.stamp{flex:none;font-weight:900;font-size:14px;padding:3px 10px;border:3px solid currentColor;border-radius:6px;transform:rotate(-7deg);animation:stamp .4s cubic-bezier(.3,1.6,.5,1) both}
+.stamp.ok{color:var(--blue)}.stamp.no{color:var(--red)}
+@keyframes stamp{from{opacity:0;transform:scale(2.4) rotate(-20deg)}}
+.meter{display:flex;flex-direction:column;justify-content:center;gap:12px}
+.big{font-size:clamp(52px,8vw,80px);font-weight:900;line-height:1}
+.bar{height:22px;border:2px solid var(--ink);border-radius:999px;background:#fff;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--blue);transition:width .5s}
+.slider label{display:flex;justify-content:space-between;font-weight:700;margin-bottom:4px}
+input[type=range]{width:100%;height:44px;accent-color:var(--blue)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:#fff;border:2px solid var(--ink)}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--ink);color:var(--yel)}
+td:first-child{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px}
+.quiz{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:22px}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fb{min-height:3.2em;margin-top:12px;font-weight:700}
+.fb.good{color:var(--blue)}.fb.bad{color:var(--red)}
+footer{background:var(--ink);color:#fff}
+footer a{color:var(--yel)}
+@media(max-width:900px){.top,.board,.steps,.lab,.quiz{grid-template-columns:minmax(0,1fr)}.cols3{grid-template-columns:minmax(0,1fr)}.stats{justify-content:flex-start}}
+@media(max-width:600px){.fig{min-height:340px}table{font-size:13px}th,td{padding:8px 6px}.stack thead{display:none}.stack tr{display:grid;padding-block:8px;border-bottom:1px solid var(--line)}.stack td{display:grid;grid-template-columns:6.5em minmax(0,1fr);gap:8px;border:0;padding:3px 8px}.stack td::before{content:attr(data-l);font-weight:700;color:var(--muted);font-family:'Archivo','Noto Sans TC',sans-serif}}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:18px}
+.half{border:3px solid var(--ink);border-radius:16px;padding:18px 20px;background:#fff;box-shadow:5px 5px 0 var(--ink)}
+.half h3{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.who{font:700 12px 'Archivo','Noto Sans TC',sans-serif;padding:3px 10px;border-radius:999px;background:var(--ink);color:var(--yel)}
+.fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:20px}
+.field{background:#fff;border:2px solid var(--ink);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.field .hd{padding:12px 14px;border-bottom:2px solid var(--ink)}
+.field .hd code{font-weight:700;font-size:15px;overflow-wrap:anywhere}
+.field .hd span{display:block;font-size:13px;color:var(--muted)}
+.field .bd{padding:12px 14px;font-size:15px;display:grid;gap:8px}
+.field .eg{font-family:'JetBrains Mono',monospace;font-size:13px;background:#fbfaf4;border-radius:8px;padding:8px;overflow-wrap:anywhere}
+.good{color:#0b6a5a;font-weight:700}.bad{color:var(--red);font-weight:700}
+.need{font-weight:700;color:var(--blue)}
+.checks{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.checks li{background:#fff;border:2px solid var(--ink);border-radius:12px;padding:12px 14px 12px 46px;position:relative}
+.checks li::before{content:"";position:absolute;left:14px;top:15px;width:20px;height:20px;background:var(--yel);border:2px solid var(--ink);clip-path:polygon(0 0,0 100%,100% 100%)}
+@media(max-width:900px){.fields{grid-template-columns:repeat(2,minmax(0,1fr))}.split,.checks{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:520px){.fields{grid-template-columns:minmax(0,1fr)}}
+math{font-family:'STIX Two Math','Cambria Math','Latin Modern Math',math;font-size:21px}
+.fx{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:20px}
+.fcard{background:#fff;border:2px solid var(--ink);border-radius:16px;box-shadow:5px 5px 0 var(--ink);overflow:hidden;display:flex;flex-direction:column}
+.fcard .hd{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 16px;border-bottom:2px solid var(--ink);background:var(--yel2)}
+.fcard .hd code{font-weight:700}
+.fcard .hd span{font-size:13px;color:var(--muted);white-space:nowrap}
+.fcard .eq{padding:16px;overflow-x:auto;background:#fff}
+.fcard .vars{padding:0 16px 12px;font-size:14px;color:var(--muted)}
+.fcard .sub{margin-top:auto;padding:12px 16px;background:#fbfaf4;border-top:1px dashed var(--line);font:13px/1.6 'JetBrains Mono',monospace;overflow-wrap:anywhere}
+.row4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.fv{border:2px solid var(--ink);border-radius:12px;padding:10px 12px;font-size:15px}
+.fv b{display:block;font:700 13px 'JetBrains Mono',monospace;margin-bottom:4px}
+.ctxl{margin:0;padding-left:1.4em}.ctxl li{margin-bottom:4px}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:6px;margin-left:6px;white-space:nowrap}
+.tag.y{background:#dff3ec;color:#0b6a5a}.tag.n{background:var(--red2);color:var(--red)}
+.scores{display:grid;gap:10px}
+.sline{display:grid;grid-template-columns:11.5em minmax(0,1fr) 3.2em;gap:12px;align-items:center}
+.sline code{font-size:14px;font-weight:700}
+.sline .bar{height:18px}
+.sline b{text-align:right;font-variant-numeric:tabular-nums}
+.sline small{grid-column:1/-1;color:var(--muted);font:12.5px/1.5 'JetBrains Mono',monospace;margin-top:-6px;overflow-wrap:anywhere}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:'Archivo',sans-serif}
+tr.avg td{background:var(--yel2);font-weight:900}
+@media(max-width:900px){.fx{grid-template-columns:minmax(0,1fr)}.row4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.row4{grid-template-columns:minmax(0,1fr)}.sline{grid-template-columns:minmax(0,1fr) 3em}.sline .bar{grid-column:1/-1;grid-row:2}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<nav aria-label="章節"><div class="wrap">
+<span class="logo"><svg width="26" height="26" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 27 L3 3 L27 27 Z" fill="#ffc627" stroke="#fff" stroke-width="1.5"/><path d="M8 22 L8 14 L16 22 Z" fill="#14151b"/></svg>ragas</span>
+<a href="#map">六大指標</a><a href="#install">安裝</a><a href="#data">準備資料</a><a href="#usage">使用</a><a href="#formulas">公式</a><a href="#sample">範例資料集</a><a href="#lab">評分實驗室</a><a href="#diagnose">分數判讀</a><a href="#quiz">小測驗</a>
+</div></nav>
+
+<header class="hero band" id="map"><div class="wrap">
+<div class="top">
+<div><h1>RAGAS：用六把尺，量出你的 RAG 哪裡歪了</h1>
+<p style="margin-top:12px">四個點：問題、檢索內容、回答、標準答案。每一條箭頭就是一個指標，量兩點之間的關係。點一條箭頭，或按「自動導覽」看它們一個一個量。</p></div>
+<div class="stats"><div class="stat"><b>0.4.4</b><span>最新版 · 2026-11</span></div><div class="stat"><b>6</b><span>經典指標</span></div><div class="stat"><b>0 – 1</b><span>分數範圍</span></div></div>
+</div>
+<div class="board">
+<div class="sheet"><div class="fig grid" id="fig"><svg id="svg" role="img" aria-label="RAGAS 指標關係圖：Query、Context、Response、Ground Truth 四個節點，六條箭頭代表六個指標"></svg></div>
+<div class="chips" id="chips" role="group" aria-label="選擇指標"></div></div>
+<aside class="panel" aria-live="polite">
+<div class="name" id="pName"></div>
+<h2 id="pTitle" style="font-size:30px;margin:0"></h2>
+<div class="route" id="pRoute"></div>
+<p id="pWhat" style="margin:0"></p>
+<dl class="kv"><dt>怎麼算</dt><dd id="pHow"></dd><dt>標準答案</dt><dd id="pRef"></dd><dt>評審</dt><dd id="pJudge"></dd></dl>
+<div class="ex"><span id="pEx"></span><b id="pScore"></b></div>
+<div class="call" id="pCall"></div>
+<div class="ctrl"><button class="btn" id="tour">▶ 自動導覽</button><button class="btn alt" id="next">下一把尺</button></div>
+</aside>
+</div>
+</div></header>
+
+<section class="band" id="install"><div class="wrap">
+<div class="sec-title"><svg class="tri" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 27 L3 3 L27 27 Z" fill="#ffc627" stroke="#14151b" stroke-width="2"/></svg><h2>安裝：三分鐘開工</h2></div>
+<p class="muted">Python 3.9 以上。RAGAS 本身不帶模型，大部分指標要一個「評審 LLM」，記得設定 API 金鑰，也可以接 Anthropic、Gemini 或本地 Ollama。</p>
+<div class="cols3" style="margin-top:18px">
+<div><h3>1. 安裝套件</h3>
+<div class="tabs" role="tablist" aria-label="安裝方式"><button class="tab" role="tab" id="t-pip" data-k="pip" aria-selected="true">pip</button><button class="tab" role="tab" id="t-uv" data-k="uv" aria-selected="false">uvx 範本</button><button class="tab" role="tab" id="t-src" data-k="src" aria-selected="false">原始碼</button></div>
+<div class="codebox"><button class="copy">複製</button><pre id="instCode"></pre></div></div>
+<div><h3>2. 設定評審金鑰</h3><div class="codebox"><button class="copy">複製</button><pre><span class="c"># 預設範本用 OpenAI</span>
+export OPENAI_API_KEY="sk-..."
+
+<span class="c"># 停用匿名使用統計（選用）</span>
+export RAGAS_DO_NOT_TRACK=true</pre></div></div>
+<div><h3>3. 確認版本</h3><div class="codebox"><button class="copy">複製</button><pre>python -c "import ragas; print(ragas.__version__)"
+<span class="c"># 0.4.4</span></pre></div>
+<p class="muted" style="margin-top:12px">quickstart 範本會產生 <code>rag.py</code>（你的 RAG）、<code>evals.py</code>（評估流程），結果存到 <code>evals/experiments/</code>。</p></div>
+</div>
+</div></section>
+
+<section class="band" id="data" style="background:#fff;border-block:3px solid var(--ink)"><div class="wrap">
+<div class="sec-title"><svg class="tri" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 27 L3 3 L27 27 Z" fill="#ffc627" stroke="#14151b" stroke-width="2"/></svg><h2>準備資料：評審要看的四樣東西</h2></div>
+<p class="muted">每一筆評估資料，就是關係圖上的四個節點。最容易搞混的是：其中兩樣由你事先準備，另外兩樣是你的 RAG 跑出來的。</p>
+<div class="split">
+<div class="half"><h3>你事先準備 <span class="who">測試集</span></h3><p style="margin:0"><code>user_input</code> 問題、<code>reference</code> 標準答案。存成 CSV，一份測試集可以重複用來評每個版本。</p></div>
+<div class="half"><h3>RAG 執行時產生 <span class="who">每次重跑</span></h3><p style="margin:0"><code>retrieved_contexts</code> 檢索內容、<code>response</code> 回答。每次改設定都要重新跑，才知道新版本的表現。</p></div>
+</div>
+<div class="fields">
+<div class="field"><div class="hd" style="background:var(--q)"><code>user_input</code><span>Query · 字串 · 你準備</span></div><div class="bd"><p style="margin:0">使用者會問的問題，照真實口吻寫。</p><div class="eg">"台北101何時完工？"</div><p style="margin:0"><span class="good">好：</span>從客服紀錄、搜尋紀錄挑真實問題<br><span class="bad">避免：</span>全是你自己想的簡單題</p></div></div>
+<div class="field"><div class="hd" style="background:var(--c)"><code>retrieved_contexts</code><span>Context · 字串清單 · RAG 產生</span></div><div class="bd"><p style="margin:0">檢索器找回、真正塞進 prompt 的段落，依排名順序。</p><div class="eg">["台北101於2004年完工，高508公尺。", "..."]</div><p style="margin:0"><span class="good">好：</span>存段落原文，保留順序<br><span class="bad">避免：</span>只存文件 ID 或整份文件</p></div></div>
+<div class="field"><div class="hd" style="background:var(--r)"><code>response</code><span>Response · 字串 · RAG 產生</span></div><div class="bd"><p style="margin:0">RAG 最後給使用者的回答，一字不改。</p><div class="eg">"台北101於2004年完工。"</div><p style="margin:0"><span class="good">好：</span>存最終輸出，含格式<br><span class="bad">避免：</span>手動修飾過的回答</p></div></div>
+<div class="field"><div class="hd" style="background:var(--g)"><code>reference</code><span>Ground Truth · 字串 · 你準備</span></div><div class="bd"><p style="margin:0">正確、完整的標準答案，最好由懂業務的人寫。</p><div class="eg">"台北101於2004年完工。"</div><p style="margin:0"><span class="good">好：</span>寫成完整句子，涵蓋所有重點<br><span class="bad">避免：</span>只寫「是」、「2004」這種片段</p></div></div>
+</div>
+
+<h3 style="margin-top:32px">哪個指標需要哪些欄位</h3>
+<div class="scroll" style="margin-top:10px"><table class="stack">
+<thead><tr><th>指標</th><th>user_input</th><th>retrieved_contexts</th><th>response</th><th>reference</th></tr></thead>
+<tbody id="matrix"></tbody></table></div>
+<p class="muted" style="margin-top:10px">只有 faithfulness 和 answer_relevancy 不需要 reference，所以上線後的真實流量（沒有標準答案）也能直接評這兩項。</p>
+
+<h3 style="margin-top:32px">三種取得資料的方式</h3>
+<div class="tabs" role="tablist" aria-label="取得資料的方式" id="dTabs"></div>
+<div class="steps"><div><p id="dWhy" style="margin:0 0 10px"></p><p class="muted" id="dNote" style="margin:0"></p></div>
+<div class="codebox"><button class="copy">複製</button><pre id="dCode"></pre></div></div>
+
+<h3 style="margin-top:32px">上線前檢查清單</h3>
+<ul class="checks">
+<li><b>題數夠嗎？</b>建議先從 50 題左右起步，太少的話一兩題就能讓平均分數大幅波動。</li>
+<li><b>題型有涵蓋嗎？</b>簡單事實題、需要整合多段的題、知識庫查不到的題（應該回答「不知道」）都要有。</li>
+<li><b>標準答案可信嗎？</b>由懂業務的人寫或審，資料更新時一併更新。</li>
+<li><b>合成題目抽查過嗎？</b>TestsetGenerator 產生的題目與答案要人工抽查，刪掉不自然或錯誤的。</li>
+<li><b>檢索內容存原文嗎？</b>存實際塞進 prompt 的段落文字與順序，不是文件名稱。</li>
+<li><b>版本有記錄嗎？</b>每次實驗一起記錄模型、chunk 大小、top-k、prompt 版本，之後才能比較。</li>
+</ul>
+<p class="muted" style="margin-top:10px">清單中的題數與題型是一般實務建議，請依你的場景調整。</p>
+</div></section>
+
+<section class="band" id="usage"><div class="wrap">
+<div class="sec-title"><svg class="tri" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 27 L3 3 L27 27 Z" fill="#ffc627" stroke="#14151b" stroke-width="2"/></svg><h2>使用：從一筆資料到整個測試集</h2></div>
+<p class="muted">0.4 版從 <code>ragas.metrics.collections</code> 匯入指標，舊的 <code>evaluate()</code> 寫法官方已列為淘汰、1.0 移除。圖上的舊名稱對照新類別：<code>answer_similarity</code> → <code>SemanticSimilarity</code>，其餘改成大駝峰，例如 <code>context_recall</code> → <code>ContextRecall</code>。</p>
+<div class="steps" style="margin-top:18px"><ol class="steplist" id="steps"></ol>
+<div><div class="codebox"><button class="copy">複製</button><pre id="stepCode"></pre></div><p class="muted" id="stepNote" style="margin-top:10px"></p></div></div>
+</div></section>
+
+<section class="band" id="formulas"><div class="wrap">
+<div class="sec-title"><svg class="tri" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 27 L3 3 L27 27 Z" fill="#ffc627" stroke="#14151b" stroke-width="2"/></svg><h2>六個指標的數學公式</h2></div>
+<p class="muted">每張卡片下方的灰色區塊，是把下一節範例資料集第 2 題代入公式的計算過程。可以在下一節切換題目，代入的數字會跟著變。</p>
+<div class="fx"><div class="fcard"><div class="hd"><code>context_precision</code><span>① 檢索精準度</span></div><div class="eq"><math display="block"><msub><mtext>Context Precision</mtext><mi>K</mi></msub><mo>=</mo><mfrac><mrow><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><mrow><mo>(</mo><mtext>Precision@</mtext><mi>k</mi><mo>×</mo><msub><mi>v</mi><mi>k</mi></msub><mo>)</mo></mrow></mrow><mrow><mtext>前 </mtext><mi>K</mi><mtext> 段中的相關段落數</mtext></mrow></mfrac></math><math display="block"><mtext>Precision@</mtext><mi>k</mi><mo>=</mo><mfrac><mrow><msub><mtext>TP</mtext><mi>k</mi></msub></mrow><mrow><msub><mtext>TP</mtext><mi>k</mi></msub><mo>+</mo><msub><mtext>FP</mtext><mi>k</mi></msub></mrow></mfrac></math></div><div class="vars">v<sub>k</sub>：第 k 段是否相關（1 或 0）；TP<sub>k</sub>、FP<sub>k</sub>：前 k 段中相關／不相關的段數。相關段落排越前面，分數越高。</div><div class="sub" id="sub0"></div></div><div class="fcard"><div class="hd"><code>context_recall</code><span>② 檢索召回率</span></div><div class="eq"><math display="block"><mtext>Context Recall</mtext><mo>=</mo><mfrac><mrow><mo>|</mo><mtext>標準答案中能由檢索內容支持的陳述</mtext><mo>|</mo></mrow><mrow><mo>|</mo><mtext>標準答案的全部陳述</mtext><mo>|</mo></mrow></mfrac></math></div><div class="vars">先把標準答案拆成陳述句，再逐條檢查能否在檢索內容中找到依據。</div><div class="sub" id="sub1"></div></div><div class="fcard"><div class="hd"><code>faithfulness</code><span>③ 忠實度</span></div><div class="eq"><math display="block"><mtext>Faithfulness</mtext><mo>=</mo><mfrac><mrow><mo>|</mo><mtext>回答中能由檢索內容支持的陳述</mtext><mo>|</mo></mrow><mrow><mo>|</mo><mtext>回答的全部陳述</mtext><mo>|</mo></mrow></mfrac></math></div><div class="vars">先把回答拆成陳述句，再逐條檢查能否由檢索內容推得。對的但內容沒寫，也算不支持。</div><div class="sub" id="sub2"></div></div><div class="fcard"><div class="hd"><code>answer_relevancy</code><span>④ 回答切題度</span></div><div class="eq"><math display="block"><mtext>Answer Relevancy</mtext><mo>=</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mi>cos</mi><mo>(</mo><msub><mi>E</mi><msub><mi>g</mi><mi>i</mi></msub></msub><mo>,</mo><msub><mi>E</mi><mi>o</mi></msub><mo>)</mo></math></div><div class="vars">評審 LLM 從回答反推 N 個問題 g<sub>i</sub>（預設 N = 3）；E 是 embedding 向量，E<sub>o</sub> 為原問題的向量。</div><div class="sub" id="sub3"></div></div><div class="fcard"><div class="hd"><code>answer_correctness</code><span>⑤ 回答正確性</span></div><div class="eq"><math display="block"><mtext>Answer Correctness</mtext><mo>=</mo><msub><mi>w</mi><mn>1</mn></msub><mo>⋅</mo><msub><mtext>F1</mtext><mtext>fact</mtext></msub><mo>+</mo><msub><mi>w</mi><mn>2</mn></msub><mo>⋅</mo><mi>cos</mi><mo>(</mo><msub><mi>E</mi><mi>r</mi></msub><mo>,</mo><msub><mi>E</mi><mtext>gt</mtext></msub><mo>)</mo></math><math display="block"><msub><mtext>F1</mtext><mtext>fact</mtext></msub><mo>=</mo><mfrac><mrow><mo>|</mo><mtext>TP</mtext><mo>|</mo></mrow><mrow><mo>|</mo><mtext>TP</mtext><mo>|</mo><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mo>(</mo><mo>|</mo><mtext>FP</mtext><mo>|</mo><mo>+</mo><mo>|</mo><mtext>FN</mtext><mo>|</mo><mo>)</mo></mrow></mfrac></math></div><div class="vars">預設 w<sub>1</sub> = 0.75、w<sub>2</sub> = 0.25。TP：兩邊都有的事實；FP：回答有、標準答案沒有；FN：標準答案有、回答漏掉。</div><div class="sub" id="sub4"></div></div><div class="fcard"><div class="hd"><code>answer_similarity</code><span>⑥ 語意相似度</span></div><div class="eq"><math display="block"><mtext>Answer Similarity</mtext><mo>=</mo><mi>cos</mi><mo>(</mo><msub><mi>E</mi><mi>r</mi></msub><mo>,</mo><msub><mi>E</mi><mtext>gt</mtext></msub><mo>)</mo><mo>=</mo><mfrac><mrow><msub><mi>E</mi><mi>r</mi></msub><mo>⋅</mo><msub><mi>E</mi><mtext>gt</mtext></msub></mrow><mrow><mo>‖</mo><msub><mi>E</mi><mi>r</mi></msub><mo>‖</mo><mspace width="0.2em"/><mo>‖</mo><msub><mi>E</mi><mtext>gt</mtext></msub><mo>‖</mo></mrow></mfrac></math></div><div class="vars">E<sub>r</sub>：回答的向量；E<sub>gt</sub>：標準答案的向量。0.4 版類別名為 SemanticSimilarity，只用 embeddings，不需評審 LLM。</div><div class="sub" id="sub5"></div></div></div>
+</div></section>
+
+<section class="band" id="sample" style="background:#fff;border-block:3px solid var(--ink)"><div class="wrap">
+<div class="sec-title"><svg class="tri" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 27 L3 3 L27 27 Z" fill="#ffc627" stroke="#14151b" stroke-width="2"/></svg><h2>範例資料集：三題實際算一遍</h2></div>
+<p class="muted">一個關於台北 101 的小型資料集。陳述句的拆解與「支持／不支持」判斷是照公式逐步手算；answer_relevancy 與 answer_similarity 需要真的 embedding 模型，這裡的 cos 值是假設的示範數字，不是 ragas 實際跑出的結果。</p>
+<div class="tabs" role="tablist" aria-label="範例題目" id="sTabs" style="margin-top:14px"></div>
+<div class="row4" id="sFields"></div>
+<div class="lab" style="margin-top:18px">
+<div class="card" id="sWork"></div>
+<div class="card"><h3>這一題的六個分數</h3><div class="scores" id="sScores"></div><p id="sMoral" style="margin:14px 0 0;font-weight:700"></p></div>
+</div>
+<h3 style="margin-top:28px">整個資料集的成績單</h3>
+<div class="scroll" style="margin-top:10px"><table class="stack"><thead><tr><th>題目</th><th class="num">precision</th><th class="num">recall</th><th class="num">faithful</th><th class="num">relevancy</th><th class="num">correct</th><th class="num">similarity</th></tr></thead><tbody id="sTable"></tbody></table></div>
+<p class="muted" style="margin-top:10px" id="sDiag"></p>
+</div></section>
+
+<section class="band" id="lab"><div class="wrap">
+<div class="sec-title"><svg class="tri" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 27 L3 3 L27 27 Z" fill="#ffc627" stroke="#14151b" stroke-width="2"/></svg><h2>評分實驗室</h2></div>
+<p class="muted">兩個最常被問的指標，親手玩一次就懂。</p>
+<h3 style="margin-top:18px">實驗一：Faithfulness 蓋章現場</h3>
+<div class="tabs" role="tablist" aria-label="範例回答" id="ansTabs"></div>
+<div class="lab">
+<div class="card"><div class="ctx"><b>Context：</b>台北 101 於 2004 年完工，高 508 公尺，曾是世界最高建築。</div><div class="ans"><b>Response：</b><span id="ansText"></span></div><ul class="claims" id="claims"></ul></div>
+<div class="card meter"><span class="muted">faithfulness</span><div class="big" id="fScore">0</div><div class="bar"><span id="fBar" style="width:0"></span></div><p class="muted" id="fSum" style="margin:0"></p><p id="fMoral" style="margin:0;font-weight:700"></p></div>
+</div>
+<h3 style="margin-top:32px">實驗二：answer_correctness 調配器</h3>
+<div class="lab">
+<div class="card"><p class="muted">answer_correctness 是兩把尺的加權：事實比對（陳述句的 F1）佔 0.75，語意相似度（embeddings）佔 0.25。拉拉看。</p>
+<div class="slider"><label for="sF"><span>事實 F1</span><span class="mono" id="vF"></span></label><input type="range" id="sF" min="0" max="1" step="0.05" value="0.6"></div>
+<div class="slider"><label for="sS"><span>語意相似度</span><span class="mono" id="vS"></span></label><input type="range" id="sS" min="0" max="1" step="0.05" value="0.95"></div>
+<p class="muted" style="margin:0">試試：相似度拉滿、F1 拉低。講得很像但事實錯，分數照樣上不去。</p></div>
+<div class="card meter"><span class="muted">answer_correctness</span><div class="big" id="cScore">0</div><div class="bar"><span id="cBar" style="width:0"></span></div><p class="mono" id="cSum" style="margin:0;font-size:14px"></p></div>
+</div>
+</div></section>
+
+<section class="band" id="diagnose" style="background:#fff;border-block:3px solid var(--ink)"><div class="wrap">
+<div class="sec-title"><svg class="tri" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 27 L3 3 L27 27 Z" fill="#ffc627" stroke="#14151b" stroke-width="2"/></svg><h2>分數判讀：哪把尺量出問題，就修哪一段</h2></div>
+<div class="scroll" style="margin-top:16px"><table class="stack">
+<thead><tr><th>指標偏低</th><th>可能原因</th><th>調整方向</th></tr></thead>
+<tbody>
+<tr><td>context_precision</td><td>雜訊多、相關段落排太後面</td><td>加 reranker、用 metadata 過濾</td></tr>
+<tr><td>context_recall</td><td>該找的段落沒找到</td><td>調 chunk 大小、換 embedding 模型、加大 top-k、混合檢索</td></tr>
+<tr><td>faithfulness</td><td>模型自行補充內容（幻覺）</td><td>prompt 要求只依據提供內容、降低 temperature、換模型</td></tr>
+<tr><td>answer_relevancy</td><td>答非所問、太冗長</td><td>調整 prompt 與輸出格式、改寫使用者問題</td></tr>
+<tr><td>answer_correctness</td><td>事實錯誤或漏掉重點</td><td>先看前四項定位；若 faithfulness 高仍偏低，多半是知識庫錯誤或過期</td></tr>
+<tr><td>answer_similarity</td><td>說法和標準答案差很多</td><td>單看它容易誤判，搭配 answer_correctness 一起看</td></tr>
+</tbody></table></div>
+<div class="cols3" style="margin-top:22px">
+<div class="card"><h3>一次只改一個變因</h3><p class="muted" style="margin:0">建測試集、跑基準線、改一個設定、比較，再放進 CI 擋下退步。</p></div>
+<div class="card"><h3>評審也會看走眼</h3><p class="muted" style="margin:0">固定評審模型與版本，定期抽樣人工複核，確認分數跟人的判斷一致。</p></div>
+<div class="card"><h3>還有更多尺</h3><p class="muted" style="margin:0">進階 RAG 指標有 Context Entity Recall、Noise Sensitivity（越低越好）；另有 Agent 工具呼叫、BLEU/ROUGE、自訂規則等類別。</p></div>
+</div>
+</div></section>
+
+<section class="band" id="quiz"><div class="wrap">
+<div class="sec-title"><svg class="tri" viewBox="0 0 30 30" aria-hidden="true"><path d="M3 27 L3 3 L27 27 Z" fill="#ffc627" stroke="#14151b" stroke-width="2"/></svg><h2>小測驗：你拿得對尺嗎？</h2></div>
+<div class="quiz" style="margin-top:16px">
+<div class="card"><p class="muted" id="qNum" style="margin-bottom:6px"></p><h3 id="qText" style="font-size:21px"></h3><div class="opts" id="qOpts"></div><p class="fb" id="qFb" aria-live="polite"></p><button class="btn alt" id="qNext">下一題</button></div>
+<div class="card meter"><span class="muted" id="qLbl">答對題數 / 總題數</span><div class="big" id="qScore">0 / 6</div><p class="muted" id="qRank" style="margin:0">還沒作答。點左邊任一個選項開始，答完 6 題會給你一個稱號。</p></div>
+</div>
+</div></section>
+
+<footer class="band"><div class="wrap"><p style="margin:0">內容以 ragas 0.4.4 為準 · 官方文件 <a href="https://docs.ragas.io">docs.ragas.io</a> · 原始碼 <a href="https://github.com/vibrantlabsai/ragas">github.com/vibrantlabsai/ragas</a></p></div></footer>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const hl=s=>esc(s).replace(/(#[^\n]*)|("[^"\n]*")|\b(import|from|async|def|await|return)\b/g,(m,c,q,k)=>c?`<span class="c">${c}</span>`:q?`<span class="s">${q}</span>`:`<span class="k">${k}</span>`);
+
+const N={g:{t:"Ground Truth",z:"標準答案",f:"var(--g)"},q:{t:"Query",z:"問題",f:"var(--q)"},r:{t:"Response",z:"回答",f:"var(--r)"},c:{t:"Context",z:"檢索內容",f:"var(--c)"}};
+const M=[
+{id:"context_precision",z:"檢索精準度",a:"q",b:"c",off:0,lt:.5,w:"找回的段落裡，相關的有沒有排在前面。排序亂、雜訊多就扣分。",h:"逐段判斷是否有助於得出標準答案，再算各相關段落位置的平均精確率。",ref:"需要",j:"LLM",ex:"3 段裡相關的排第 1、3 名：(1 + 2/3) ÷ 2",sc:"0.83",call:"await ContextPrecision(llm=llm).ascore(user_input, reference, retrieved_contexts)"},
+{id:"context_recall",z:"檢索召回率",a:"c",b:"g",off:0,lt:.72,w:"標準答案需要的資訊，有沒有都被檢索器找回來。",h:"把標準答案拆成陳述句，檢查每句能否在檢索內容中找到依據。",ref:"需要",j:"LLM",ex:"標準答案 3 個重點，找回 2 個",sc:"0.67",call:"await ContextRecall(llm=llm).ascore(user_input, retrieved_contexts, reference)"},
+{id:"faithfulness",z:"忠實度",a:"c",b:"r",off:0,lt:.5,w:"回答裡的每句話，是否都能在檢索內容中找到依據。抓幻覺的主力。",h:"回答拆成陳述句，逐條查證，支持數 ÷ 總數。",ref:"不需要",j:"LLM",ex:"4 條陳述只有 2 條有依據",sc:"0.5",call:"await Faithfulness(llm=llm).ascore(user_input, response, retrieved_contexts)"},
+{id:"answer_relevancy",z:"回答切題度",a:"r",b:"q",off:0,lt:.3,w:"回答有沒有正面回應問題。答非所問、廢話太多都會扣分。",h:"從回答反推出幾個問題，用 embeddings 算它們和原問題的平均相似度。",ref:"不需要",j:"LLM + embeddings",ex:"反推 3 個問題，平均相似度",sc:"0.92",call:"await AnswerRelevancy(llm=llm, embeddings=emb).ascore(user_input, response)"},
+{id:"answer_correctness",z:"回答正確性",a:"r",b:"g",off:-26,lt:.3,w:"回答和標準答案相比，事實對不對、完不完整。",h:"0.75 × 事實比對 F1 + 0.25 × 語意相似度（權重可調）。",ref:"需要",j:"LLM + embeddings",ex:"F1 0.8、相似度 0.9：0.75×0.8 + 0.25×0.9",sc:"0.83",call:"await AnswerCorrectness(llm=llm, embeddings=emb).ascore(user_input, response, reference)"},
+{id:"answer_similarity",z:"語意相似度",a:"r",b:"g",off:26,lt:.62,w:"回答和標準答案的意思有多接近，不檢查細節事實。",h:"兩段文字轉成 embeddings，算 cosine 相似度。0.4 版類別名為 SemanticSimilarity。",ref:"需要",j:"只要 embeddings",ex:"「2004 年完工」vs「於 2004 年落成」",sc:"0.91",call:"await SemanticSimilarity(embeddings=emb).ascore(reference, response)"}];
+let cur=2,tourT=null;
+const svg=$('svg'),fig=$('fig');
+const draw=()=>{const W=fig.clientWidth,H=fig.clientHeight,nar=W<560;
+const nw=Math.min(190,W*.34),nh=nar?50:58,px=nar?10:26,py=nar?18:30;
+const P={g:[px+nw/2,py+nh/2],q:[W-px-nw/2,py+nh/2],r:[px+nw/2,H-py-nh/2],c:[W-px-nw/2,H-py-nh/2]};
+const clip=(a,b)=>{const [x1,y1]=P[a],[x2,y2]=P[b],dx=x2-x1,dy=y2-y1,s=Math.min(Math.abs((nw/2+8)/(dx||1e-9)),Math.abs((nh/2+8)/(dy||1e-9)));return [x1+dx*s,y1+dy*s,x2-dx*s,y2-dy*s]};
+let e='',lab='';
+M.forEach((m,i)=>{let [x1,y1,x2,y2]=clip(m.a,m.b);const L=Math.hypot(x2-x1,y2-y1),nx=-(y2-y1)/L,ny=(x2-x1)/L;x1+=nx*m.off;y1+=ny*m.off;x2+=nx*m.off;y2+=ny*m.off;
+const on=i==cur,col=on?'var(--blue)':'#b9b4a3',d=`M${x1},${y1} L${x2},${y2}`;
+e+=`<g class="edge" data-i="${i}" opacity="${on?1:.75}"><path d="${d}" stroke="transparent" stroke-width="26"/><path d="${d}" stroke="${col}" stroke-width="${on?5:3}" fill="none" marker-end="url(#ar${on?1:0})" class="${on?'flow':''}"/>${on?`<circle r="8" fill="var(--yel)" stroke="var(--ink)" stroke-width="2"><animateMotion dur="1.6s" repeatCount="indefinite" path="${d}"/></circle>`:''}</g>`;
+const lx=x1+(x2-x1)*m.lt,ly=y1+(y2-y1)*m.lt,side=m.off<0?-1:1,ox=(m.a==m.b)?0:(Math.abs(nx)>.5?nx*side*(nar?18:22):0),oy=Math.abs(nx)>.5?0:-14;
+const dg=((lx-W/2)*nx+(ly-H/2)*ny)>=0?1:-1,pair=m.a=='r'&&m.b=='g',anc=pair?'start':Math.abs(nx)>.9?(nx*side>0?'start':'end'):'middle',tx=pair?lx+20+(m.off<0?52:0):lx+(anc=='start'?20:anc=='end'?-20:0);
+lab+=`<g class="edge" data-i="${i}"><circle cx="${lx}" cy="${ly}" r="14" fill="${on?'var(--blue)':'var(--yel)'}" stroke="var(--ink)" stroke-width="2"/><text x="${lx}" y="${ly+5}" text-anchor="middle" font-size="14" font-weight="900" fill="${on?'#fff':'var(--ink)'}" style="stroke:none">${i+1}</text></g>`;});
+const hit=M[cur],gap=W-2*px-2*nw,pw=Math.min(gap-24,hit.id.length*9.2+30);
+const nodes=Object.entries(P).map(([k,[x,y]])=>{const lit=k==hit.a||k==hit.b;return `<g><rect x="${x-nw/2+5}" y="${y-nh/2+5}" width="${nw}" height="${nh}" rx="12" fill="var(--ink)"/><rect x="${x-nw/2}" y="${y-nh/2}" width="${nw}" height="${nh}" rx="12" fill="${N[k].f}" stroke="var(--ink)" stroke-width="${lit?4:2}"/><text x="${x}" y="${y-(nar?2:4)}" text-anchor="middle" font-size="${nar?14:17}" font-weight="900" fill="var(--ink)" style="stroke:none">${N[k].t}</text><text x="${x}" y="${y+(nar?14:16)}" text-anchor="middle" font-size="13" fill="var(--muted)" style="stroke:none">${N[k].z}</text></g>`}).join('');
+svg.innerHTML=`<defs><marker id="ar0" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#b9b4a3"/></marker><marker id="ar1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="var(--blue)"/></marker></defs>${e}${nodes}${lab}${gap<190?'':`<g><rect x="${W/2-pw/2}" y="${py+nh/2-17}" width="${pw}" height="34" rx="17" fill="var(--blue)"/><text x="${W/2}" y="${py+nh/2+5}" text-anchor="middle" font-size="15" font-family="JetBrains Mono,monospace" font-weight="700" fill="#fff" style="stroke:none">${hit.id}</text></g>`}`;};
+const ro=new ResizeObserver(draw);ro.observe(fig);
+const pick=i=>{cur=i;const m=M[i];draw();
+document.querySelectorAll('#chips .chip').forEach((b,j)=>b.setAttribute('aria-pressed',j==i));
+$('pName').textContent=`${i+1} / 6 · ${m.id}`;$('pTitle').textContent=m.z;
+$('pRoute').innerHTML=`<span class="node" style="background:${N[m.a].f}">${N[m.a].t}</span>→<span class="node" style="background:${N[m.b].f}">${N[m.b].t}</span>`;
+$('pWhat').textContent=m.w;$('pHow').textContent=m.h;$('pRef').textContent=m.ref;$('pJudge').textContent=m.j;$('pEx').textContent=m.ex;$('pScore').textContent=m.sc;$('pCall').textContent=m.call;};
+$('chips').innerHTML=M.map((m,i)=>`<button class="chip" data-i="${i}" aria-pressed="false"><i>${i+1}</i>${m.id}</button>`).join('');
+const stopTour=()=>{clearInterval(tourT);tourT=null;$('tour').textContent='▶ 自動導覽'};
+$('chips').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b){stopTour();pick(+b.dataset.i)}});
+svg.addEventListener('click',e=>{const g=e.target.closest('.edge');if(g){stopTour();pick(+g.dataset.i)}});
+$('next').addEventListener('click',()=>{stopTour();pick((cur+1)%6)});
+$('tour').addEventListener('click',()=>{if(tourT){stopTour();return}pick((cur+1)%6);tourT=setInterval(()=>pick((cur+1)%6),3200);$('tour').textContent='❚❚ 暫停導覽'});
+pick(2);
+
+const INST={pip:`pip install ragas`,uv:`# 免安裝，直接產生範本專案（需 uv）
+uvx ragas quickstart rag_eval
+cd rag_eval && uv sync
+python evals.py`,src:`pip install git+https://github.com/vibrantlabsai/ragas`};
+const setInst=k=>{document.querySelectorAll('.tab[data-k]').forEach(t=>t.setAttribute('aria-selected',t.dataset.k==k));$('instCode').innerHTML=hl(INST[k])};
+document.querySelectorAll('.tab[data-k]').forEach(t=>t.addEventListener('click',()=>setInst(t.dataset.k)));setInst('pip');
+
+const STEPS=[
+{t:"準備一筆資料",d:"對應圖上四個節點",c:`sample = {
+    "user_input": "台北101何時完工？",            # Query
+    "retrieved_contexts": ["台北101於2004年完工，高508公尺。"],  # Context
+    "response": "台北101於2004年完工。",          # Response
+    "reference": "2004年",                        # Ground Truth
+}`,n:"四個欄位的詳細說明、各指標需要哪些欄位、三種取得資料的方式，請看上方「準備資料」一節。"},
+{t:"建評審與 embeddings",d:"llm_factory",c:`from openai import AsyncOpenAI
+from ragas.llms import llm_factory
+from ragas.embeddings import OpenAIEmbeddings
+
+client = AsyncOpenAI()
+llm = llm_factory("gpt-4o-mini", client=client)
+emb = OpenAIEmbeddings(client=client)   # answer_relevancy 等指標需要`,n:"評審 LLM 也可以換成 Anthropic、Gemini 或本地 Ollama。"},
+{t:"六把尺一起量",d:"metrics.collections",c:`import asyncio
+from ragas.metrics.collections import (
+    ContextPrecision, ContextRecall, Faithfulness,
+    AnswerRelevancy, AnswerCorrectness, SemanticSimilarity,
+)
+
+async def main():
+    s = sample
+    scores = {
+        "context_precision": await ContextPrecision(llm=llm).ascore(
+            user_input=s["user_input"], reference=s["reference"],
+            retrieved_contexts=s["retrieved_contexts"]),
+        "context_recall": await ContextRecall(llm=llm).ascore(
+            user_input=s["user_input"], reference=s["reference"],
+            retrieved_contexts=s["retrieved_contexts"]),
+        "faithfulness": await Faithfulness(llm=llm).ascore(
+            user_input=s["user_input"], response=s["response"],
+            retrieved_contexts=s["retrieved_contexts"]),
+        "answer_relevancy": await AnswerRelevancy(llm=llm, embeddings=emb).ascore(
+            user_input=s["user_input"], response=s["response"]),
+        "answer_correctness": await AnswerCorrectness(llm=llm, embeddings=emb).ascore(
+            user_input=s["user_input"], response=s["response"], reference=s["reference"]),
+        "answer_similarity": await SemanticSimilarity(embeddings=emb).ascore(
+            reference=s["reference"], response=s["response"]),
+    }
+    for k, r in scores.items():
+        print(f"{k:20s} {r.value:.2f}")
+
+asyncio.run(main())`,n:"每個指標回傳 MetricResult，分數在 .value。同步環境可改用 .score()。"},
+{t:"跑整個測試集",d:"@experiment + Dataset",c:`from ragas import experiment, Dataset
+
+ds = Dataset.load(name="test_data", backend="local/csv", root_dir="./evals")
+faith = Faithfulness(llm=llm)
+
+@experiment()
+async def baseline(row):
+    out = await my_rag(row["question"])   # 你的 RAG
+    r = await faith.ascore(user_input=row["question"],
+                           response=out["answer"],
+                           retrieved_contexts=out["contexts"])
+    return {**row, "response": out["answer"], "faithfulness": r.value}
+
+results = await baseline.arun(ds)`,n:"結果自動存成帶時間戳記的 CSV。每改一次設定就跑一個新實驗，直接比較。"}];
+const step=i=>{document.querySelectorAll('#steps button').forEach((b,j)=>b.setAttribute('aria-current',j==i));$('stepCode').innerHTML=hl(STEPS[i].c);$('stepNote').textContent=STEPS[i].n};
+$('steps').innerHTML=STEPS.map((s,i)=>`<li><button data-i="${i}" aria-current="false"><b>${i+1}. ${s.t}</b><span class="muted">${s.d}</span></button></li>`).join('');
+$('steps').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b)step(+b.dataset.i)});step(2);
+
+
+const MX=[["context_precision",1,1,0,1],["context_recall",1,1,0,1],["faithfulness",1,1,1,0],["answer_relevancy",1,0,1,0],["answer_correctness",1,0,1,1],["answer_similarity",0,0,1,1]];
+const HD=["user_input","retrieved_contexts","response","reference"];
+$('matrix').innerHTML=MX.map(r=>`<tr><td>${r[0]}</td>${r.slice(1).map((v,j)=>`<td data-l="${HD[j]}">${v?'<span class="need">需要</span>':'<span class="muted">不用</span>'}</td>`).join('')}</tr>`).join('');
+const DW=[
+{k:"A. 手寫測試集",w:"最可靠的起點：挑一批真實問題，請懂業務的人寫標準答案，存成 CSV。之後每個版本都用這份測試集評。",n:"存檔位置是 root_dir 下的 datasets/ 資料夾，例如 evals/datasets/test_data.csv。欄位名稱可以自訂，在 @experiment 裡對應到指標參數即可。",c:`from ragas import Dataset
+
+ds = Dataset(name="test_data", backend="local/csv", root_dir="./evals")
+ds.append({"question": "台北101何時完工？",
+           "reference": "台北101於2004年完工。"})
+ds.append({"question": "台北101有多高？",
+           "reference": "台北101高508公尺。"})
+ds.save()   # → evals/datasets/test_data.csv
+
+ds = Dataset.load(name="test_data", backend="local/csv", root_dir="./evals")
+print(len(ds), ds[0])`},
+{k:"B. 從線上紀錄擷取",w:"在 RAG 程式裡順手記下問題、檢索內容和回答。這種資料沒有標準答案，適合評 faithfulness 和 answer_relevancy，也能從中挑題目補進測試集。",n:"清單欄位存進 CSV 時先轉成 JSON 字串，讀回來再用 json.loads 還原。注意先移除個資。",c:`import csv, json
+
+f = open("rag_log.csv", "a", newline="", encoding="utf-8")
+writer = csv.DictWriter(f, fieldnames=["user_input", "retrieved_contexts", "response"])
+
+def answer_and_log(question):
+    docs = retriever.invoke(question)              # 你的檢索器
+    contexts = [d.page_content for d in docs]      # 存實際送進模型的段落
+    answer = generate(question, contexts)          # 你的生成步驟
+    writer.writerow({
+        "user_input": question,
+        "retrieved_contexts": json.dumps(contexts, ensure_ascii=False),
+        "response": answer,
+    })
+    return answer`},
+{k:"C. 自動合成題目",w:"知識庫很大、一時寫不出那麼多題時，用 TestsetGenerator 從你的文件自動產生問題與標準答案。",n:"產生的欄位包含 user_input、reference_contexts、reference。合成題目一定要人工抽查，再和手寫題混合使用。另需安裝 langchain-openai 與 langchain-community。",c:`from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from ragas.testset import TestsetGenerator
+
+docs = DirectoryLoader("./knowledge", glob="**/*.md",
+                       loader_cls=TextLoader).load()
+
+gen = TestsetGenerator.from_langchain(
+    ChatOpenAI(model="gpt-4o-mini"), OpenAIEmbeddings())
+testset = gen.generate_with_langchain_docs(docs, testset_size=20)
+
+df = testset.to_pandas()   # user_input, reference_contexts, reference ...
+df.to_csv("evals/datasets/synthetic.csv", index=False)`}];
+const dsel=i=>{document.querySelectorAll('#dTabs .tab').forEach((t,j)=>t.setAttribute('aria-selected',j==i));$('dWhy').textContent=DW[i].w;$('dNote').textContent=DW[i].n;$('dCode').innerHTML=hl(DW[i].c)};
+$('dTabs').innerHTML=DW.map((d,i)=>`<button class="tab" role="tab" id="dt-${i}" data-d="${i}" aria-selected="false">${d.k}</button>`).join('');
+$('dTabs').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(b)dsel(+b.dataset.d)});dsel(0);
+
+const SD=[
+{q:"台北101何時完工？",ctx:[["台北101於2004年完工，高508公尺。",1],["台北101位於信義區，由李祖原設計。",0]],resp:"台北101於2004年完工。",ref:"台北101於2004年完工。",
+ refC:[["2004年完工",1]],respC:[["2004年完工",1]],tp:["2004年完工"],fp:[],fn:[],gq:[.95,.93,.94],sim:.97,m:"檢索、生成都正常：第一段就命中，回答每句都有依據。"},
+{q:"台北101有多高、是誰設計的？",ctx:[["台北101位於信義區，由李祖原設計。",1],["台北101於2004年完工。",0],["台北101高508公尺。",1]],resp:"台北101高508公尺，由李祖原設計，是目前世界最高建築。",ref:"台北101高508公尺，由李祖原設計。",
+ refC:[["高508公尺",1],["由李祖原設計",1]],respC:[["高508公尺",1],["由李祖原設計",1],["是目前世界最高建築",0]],tp:["高508公尺","由李祖原設計"],fp:["是目前世界最高建築"],fn:[],gq:[.92,.88,.90],sim:.92,m:"檢索有找到但排序不夠好（無關段落排第 2）；回答多了一句幻覺，拉低 faithfulness 與 correctness。"},
+{q:"台北101有幾部電梯？",ctx:[["台北101於2004年完工，高508公尺。",0],["台北101位於信義區。",0]],resp:"台北101共有61部電梯，其中包含高速電梯。",ref:"台北101共有61部電梯。",
+ refC:[["共有61部電梯",0]],respC:[["共有61部電梯",0],["包含高速電梯",0]],tp:["共有61部電梯"],fp:["包含高速電梯"],fn:[],gq:[.94,.92,.93],sim:.88,m:"檢索完全失敗（precision、recall 都是 0）。回答雖然大致答對，卻是模型憑記憶講的，faithfulness 為 0，這種情況上線很危險。"}];
+const r2=v=>Math.round(v*100)/100,f2=v=>r2(v).toFixed(2);
+const calc=d=>{const v=d.ctx.map(c=>c[1]),K=v.length,rel=v.reduce((a,b)=>a+b,0);let sum=0,tp=0,parts=[];
+v.forEach((x,k)=>{if(x){tp++;}const pk=tp/(k+1);if(x){sum+=pk;parts.push(`${tp}/${k+1}`)}});
+const cp=rel?sum/rel:0,cr=d.refC.filter(c=>c[1]).length/d.refC.length,ff=d.respC.filter(c=>c[1]).length/d.respC.length,ar=d.gq.reduce((a,b)=>a+b,0)/d.gq.length,
+TP=d.tp.length,FP=d.fp.length,FN=d.fn.length,f1=TP/(TP+.5*(FP+FN)),ac=.75*f1+.25*d.sim;
+return {cp,cr,ff,ar,ac,as:d.sim,
+s:[rel?`v = [${v.join(', ')}] → (${parts.join(' + ')}) ÷ ${rel} = ${f2(cp)}`:`v = [${v.join(', ')}] → 沒有相關段落 = 0.00`,
+`${d.refC.filter(c=>c[1]).length} ÷ ${d.refC.length} = ${f2(cr)}`,
+`${d.respC.filter(c=>c[1]).length} ÷ ${d.respC.length} = ${f2(ff)}`,
+`(${d.gq.join(' + ')}) ÷ ${d.gq.length} = ${f2(ar)}（cos 為假設值）`,
+`F1 = ${TP} ÷ (${TP} + ½×(${FP}+${FN})) = ${f2(f1)}；0.75×${f2(f1)} + 0.25×${d.sim} = ${f2(ac)}`,
+`cos(E_r, E_gt) = ${d.sim}（假設值）`]}};
+const NAMES=["context_precision","context_recall","faithfulness","answer_relevancy","answer_correctness","answer_similarity"];
+const KEYS=["cp","cr","ff","ar","ac","as"];
+const tg=(ok,y,n)=>`<span class="tag ${ok?'y':'n'}">${ok?y:n}</span>`;
+const ssel=i=>{const d=SD[i],c=calc(d);
+document.querySelectorAll('#sTabs .tab').forEach((t,j)=>t.setAttribute('aria-selected',j==i));
+$('sFields').innerHTML=[["user_input",d.q,"var(--q)"],["retrieved_contexts",`${d.ctx.length} 段，見左下`,"var(--c)"],["response",d.resp,"var(--r)"],["reference",d.ref,"var(--g)"]].map(f=>`<div class="fv" style="background:${f[2]}"><b>${f[0]}</b>${esc(f[1])}</div>`).join('');
+$('sWork').innerHTML=`<h3>評審的拆解過程</h3>
+<p class="muted" style="margin:8px 0 4px">檢索內容（依排名）與是否相關：</p><ol class="ctxl">${d.ctx.map(x=>`<li>${esc(x[0])}${tg(x[1],'相關','不相關')}</li>`).join('')}</ol>
+<p class="muted" style="margin:10px 0 4px">標準答案的陳述 → 檢索內容裡找得到嗎？</p><ul class="ctxl">${d.refC.map(x=>`<li>${esc(x[0])}${tg(x[1],'找得到','找不到')}</li>`).join('')}</ul>
+<p class="muted" style="margin:10px 0 4px">回答的陳述 → 有檢索內容支持嗎？</p><ul class="ctxl">${d.respC.map(x=>`<li>${esc(x[0])}${tg(x[1],'支持','無依據')}</li>`).join('')}</ul>
+<p class="muted" style="margin:10px 0 4px">回答 vs 標準答案的事實：</p><p style="margin:0;font-size:15px">TP ${d.tp.length}：${esc(d.tp.join('、')||'無')}<br>FP ${d.fp.length}：${esc(d.fp.join('、')||'無')}<br>FN ${d.fn.length}：${esc(d.fn.join('、')||'無')}</p>`;
+$('sScores').innerHTML=KEYS.map((k,j)=>{const v=c[k];return `<div class="sline"><code>${NAMES[j]}</code><div class="bar"><span style="width:${v*100}%;background:${v>=.7?'var(--blue)':'var(--red)'}"></span></div><b>${f2(v)}</b><small>${esc(c.s[j])}</small></div>`}).join('');
+$('sMoral').textContent=d.m;
+c.s.forEach((t,j)=>{$('sub'+j).textContent=`代入第 ${i+1} 題：`+t});};
+$('sTabs').innerHTML=SD.map((d,i)=>`<button class="tab" role="tab" id="st-${i}" data-s="${i}" aria-selected="false">第 ${i+1} 題</button>`).join('');
+$('sTabs').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(b)ssel(+b.dataset.s)});
+const ALL=SD.map(calc),AVG=KEYS.map(k=>ALL.reduce((a,c)=>a+c[k],0)/ALL.length);
+const HL=["題目","precision","recall","faithful","relevancy","correct","similarity"];
+$('sTable').innerHTML=ALL.map((c,i)=>`<tr><td data-l="題目">${i+1}. ${esc(SD[i].q)}</td>${KEYS.map((k,j)=>`<td class="num" data-l="${HL[j+1]}">${f2(c[k])}</td>`).join('')}</tr>`).join('')+`<tr class="avg"><td data-l="題目">平均</td>${AVG.map((v,j)=>`<td class="num" data-l="${HL[j+1]}">${f2(v)}</td>`).join('')}</tr>`;
+$('sDiag').textContent=`判讀：context_recall 平均只有 ${f2(AVG[1])}、faithfulness 平均 ${f2(AVG[2])}，兩者都被第 3 題拖累。下一步該先修檢索器（例如補上電梯相關文件、加大 top-k），而不是先換生成模型。`;
+ssel(1);
+const fmt=v=>(Math.round(v*100)/100).toString();
+const ANS=[
+{k:"有憑有據",a:"台北 101 於 2004 年完工，高 508 公尺。",c:[["2004 年完工",1],["高 508 公尺",1]],m:"每句都有出處，滿分。"},
+{k:"順手多講",a:"台北 101 於 2004 年完工、高 508 公尺、位於信義區，是目前世界最高建築。",c:[["2004 年完工",1],["高 508 公尺",1],["位於信義區",0],["目前世界最高建築",0]],m:"「位於信義區」是真的，但 Context 沒寫，照樣扣分；「目前最高」則是幻覺。"},
+{k:"自由發揮",a:"台北 101 於 1999 年完工，有 120 層樓，晚上會變色。",c:[["1999 年完工",0],["有 120 層樓",0],["晚上會變色",0]],m:"全部沒有依據，評審一個章都沒蓋。"}];
+const judge=i=>{const a=ANS[i],ok=a.c.filter(c=>c[1]).length,v=ok/a.c.length;
+document.querySelectorAll('#ansTabs .tab').forEach((t,j)=>t.setAttribute('aria-selected',j==i));
+$('ansText').textContent=a.a;
+$('claims').innerHTML=a.c.map((c,j)=>`<li><span>${c[0]}</span><span class="stamp ${c[1]?'ok':'no'}" style="animation-delay:${j*.25}s">${c[1]?'支持':'無依據'}</span></li>`).join('');
+$('fScore').textContent=fmt(v);$('fBar').style.width=v*100+'%';$('fBar').style.background=v>=.7?'var(--blue)':'var(--red)';
+$('fSum').textContent=`${ok} 條支持 ÷ ${a.c.length} 條陳述`;$('fMoral').textContent=a.m;};
+$('ansTabs').innerHTML=ANS.map((a,i)=>`<button class="tab" role="tab" id="ans-${i}" data-a="${i}" aria-selected="false">${a.k}</button>`).join('');
+$('ansTabs').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b)judge(+b.dataset.a)});judge(1);
+
+const mix=()=>{const f=+$('sF').value,s=+$('sS').value,v=.75*f+.25*s;
+$('vF').textContent=f.toFixed(2);$('vS').textContent=s.toFixed(2);$('cScore').textContent=v.toFixed(2);
+$('cBar').style.width=v*100+'%';$('cBar').style.background=v>=.7?'var(--blue)':'var(--red)';
+$('cSum').textContent=`0.75 × ${f.toFixed(2)} + 0.25 × ${s.toFixed(2)} = ${v.toFixed(2)}`;};
+$('sF').addEventListener('input',mix);$('sS').addEventListener('input',mix);mix();
+
+const Q=[
+{q:"知識庫裡有答案，但檢索回來的五段全都在講運費。",a:"context_recall",w:"該找的段落沒被找回，先修檢索器。"},
+{q:"相關段落有找到，但排在第 9 名，前面 8 段都是雜訊。",a:"context_precision",w:"排序問題，加 reranker 通常有效。"},
+{q:"回答引用了「2025 年新制」，但檢索內容完全沒提到。",a:"faithfulness",w:"模型自己補了沒依據的內容，就是幻覺。"},
+{q:"使用者問「退貨期限幾天？」，回答說「依規定處理」。",a:"answer_relevancy",w:"沒有正面回應問題，切題度會很低。"},
+{q:"回答說「保固兩年」，標準答案是「保固一年」，其他敘述都一樣。",a:"answer_correctness",w:"語意很像但事實錯了，answer_correctness 的事實 F1 會抓到；answer_similarity 反而可能很高。"},
+{q:"只想快速、便宜地檢查回答意思和標準答案像不像，不呼叫 LLM。",a:"answer_similarity",w:"它只用 embeddings 算相似度，不需要評審 LLM。"}];
+const OPT=M.map(m=>m.id);
+let qi=0,right=0,done=0,answered=false;
+const RANK=["再拿尺量量看！","有概念了","不錯喔","快成為 RAG 醫生了","專業評審","滿分量測大師"];
+const showQ=()=>{const q=Q[qi];answered=false;$('qNum').textContent=`第 ${qi+1} 題，共 ${Q.length} 題`;$('qText').textContent=q.q;$('qFb').textContent='';$('qFb').className='fb';
+$('qOpts').innerHTML=OPT.map(o=>`<button class="chip" data-o="${o}" aria-pressed="false">${o}</button>`).join('');};
+$('qOpts').addEventListener('click',e=>{const b=e.target.closest('[data-o]');if(!b||answered)return;answered=true;done++;
+const q=Q[qi],good=b.dataset.o==q.a;if(good)right++;b.setAttribute('aria-pressed','true');
+$('qFb').textContent=(good?'答對了！':`差一點，答案是 ${q.a}。`)+q.w;$('qFb').className='fb '+(good?'good':'bad');$('qScore').textContent=`${right} / ${Q.length}`;$('qLbl').textContent=`答對題數 / 總題數（已答 ${done} 題）`;
+if(done==Q.length)$('qRank').textContent='稱號：'+RANK[Math.min(5,Math.round(right/Q.length*5))];});
+$('qNext').addEventListener('click',()=>{qi=(qi+1)%Q.length;if(qi==0){right=0;done=0;$('qScore').textContent=`0 / ${Q.length}`;$('qLbl').textContent='答對題數 / 總題數';$('qRank').textContent='還沒作答。點左邊任一個選項開始，答完 6 題會給你一個稱號。'}showQ()});showQ();
+
+document.addEventListener('click',async e=>{const b=e.target.closest('.copy');if(!b)return;const t=b.parentElement.querySelector('pre').textContent;
+try{await navigator.clipboard.writeText(t);b.textContent='已複製'}catch(err){b.textContent='請手動選取'}setTimeout(()=>b.textContent='複製',1600)});
+}
+</script>
+</body>
+</html>
